@@ -1,0 +1,134 @@
+#!/usr/bin/env bash
+
+# another *righteous entropy synthesis* by ⎰𝙉𝙄𝙈⎰ ...
+# ----------------------------------------------------------------------------
+#   NIM Substation One | Planet Earth | https://github.com/metasyndicate
+# ----------------------------------------------------------------------------
+#   ... The NIM ***Metashell***: ***bin/nim***
+#   operator entry point. resolves the metashell library, sources it, and
+#   dispatches subcommands. for interactive use, prefer:
+#     source /path/to/etc/nim.init.sh
+# ----------------------------------------------------------------------------
+
+# Require bash 4+. macOS ships bash 3.2 at /bin/bash; ensure the env shebang
+# picks up a newer bash (homebrew, MacPorts, system) ahead of it on PATH.
+if [[ -z ${BASH_VERSINFO[0]:-} ]] || (( BASH_VERSINFO[0] < 4 )); then
+    printf "nim: bash 4+ required (got %s).\n" \
+        "${BASH_VERSION:-unknown}" >&2
+    printf "     install via 'brew install bash'; ensure homebrew bin\n" >&2
+    printf "     is on PATH ahead of /bin/bash.\n" >&2
+    exit 1
+fi
+
+set -o pipefail
+
+# === RESOLVE LIBRARY (handle symlinks; bin/ may live anywhere) ===
+
+_nim_real="$(realpath "${BASH_SOURCE[0]}" 2>/dev/null \
+    || readlink -f "${BASH_SOURCE[0]}" 2>/dev/null \
+    || printf '%s' "${BASH_SOURCE[0]}")"
+_nim_bin_dir="$(cd "$(dirname "${_nim_real}")" && pwd)"
+_nim_root="$(dirname "${_nim_bin_dir}")"
+_nim_lib="${_nim_root}/lib/nim.sh"
+
+[[ -r ${_nim_lib} ]] || {
+    printf "nim: cannot locate library: %s\n" "${_nim_lib}" >&2
+    exit 1; }
+
+# === FORCE THE PATH ROOTS ===
+# bin/nim is authoritative about where the metashell lives — override any
+# stale environment values inherited from the parent shell.
+export NIM_LIBPATH="${_nim_root}/lib"
+export NIM_METASHELL="${_nim_root}"
+unset NIM_HOME NIM_OPS NIM_METASHELL_ETC NIM_METASHELL_BIN \
+      NIM_METASHELL_LIB NIM_METASHELL_DAT NIM_METASHELL_SYS \
+      NIM_METASHELL_LOG NIM_METASHELL_VAR
+
+# === BOOT THE LIBRARY ===
+
+source "${_nim_lib}" || {
+    printf "nim: bootstrap failed\n" >&2
+    exit 1; }
+
+# Eager-load the full L2/L3 surface so `nim list` and `nim run` see every
+# public function. Cheap on a small library; allows `nim run any.public.fn`
+# without the operator first having to source the right module.
+nim.source colors output strings \
+            input get validate \
+            fs mod codex setup 2>/dev/null
+
+# === SUBCOMMAND DISPATCH ===
+
+_nim_help() {
+    printf "\n"
+    printf "  ${SKY}NIM Metashell${OFF} — operator entry point\n"
+    printf "\n"
+    printf "  usage: nim ${LGY}<subcommand>${OFF} [args...]\n"
+    printf "\n"
+    printf "  ${BLD}lifecycle${OFF}\n"
+    printf "    ${GRN}setup${OFF}     provision operator scope, seed config\n"
+    printf "    ${GRN}init${OFF}      emit shell snippet for your profile\n"
+    printf "    ${GRN}doctor${OFF}    audit environment health\n"
+    printf "    ${GRN}summary${OFF}   paths, loaded modules, registered sets\n"
+    printf "\n"
+    printf "  ${BLD}discovery${OFF}\n"
+    printf "    ${GRN}list${OFF}      list public functions (pass filter)\n"
+    printf "    ${GRN}help${OFF} <fn> render usage from \\#\\#\\! metadata\n"
+    printf "    ${GRN}loaded${OFF}    list currently-loaded modules\n"
+    printf "    ${GRN}sets${OFF}      list registered subsystems\n"
+    printf "\n"
+    printf "  ${BLD}runtime${OFF}\n"
+    printf "    ${GRN}run${OFF} <fn> ...    invoke a public fn in this proc\n"
+    printf "    ${GRN}source${OFF} <m> ...  source a module (sourced shell)\n"
+    printf "    ${GRN}register${OFF} <p>    register a subsystem at <path>\n"
+    printf "\n"
+    printf "  install: add ${GRN}source %s/etc/nim.init.sh${OFF}\n" "${_nim_root}"
+    printf "           to ~/.bashrc / ~/.zshrc\n"
+    printf "\n"
+    return 0; }
+
+_nim_main() {
+    local cmd="${1:-help}"; shift 2>/dev/null
+
+    case "${cmd}" in
+        setup)      nim.setup.operator "${@}" ;;
+        init)       nim.setup.init "${@}" ;;
+        doctor)     nim.setup.doctor "${@}" ;;
+        summary)    nim.setup.summary "${@}" ;;
+        list)       nim.fn.list "${@}" ;;
+        help)       [[ ${#} -eq 0 ]] && { _nim_help; return 0; }
+                    nim.fn.help "${@}" ;;
+        loaded)     nim.source.loaded ;;
+        sets)       nim.mod.list ;;
+        register)   nim.mod.register "${@}" ;;
+        source)     nim.source "${@}"
+                    nim.log.warn \
+                        "subcommand 'source' only persists if sourced;"
+                    nim.log.warn \
+                        "  prefer: source ${_nim_root}/etc/nim.init.sh"
+                    ;;
+        run)        local fn="${1}"; shift 2>/dev/null
+                    if nim.fn.exists "${fn}"; then
+                        "${fn}" "${@}"
+                    elif nim.fn.exists "nim.${fn}"; then
+                        "nim.${fn}" "${@}"
+                    else
+                        nim.out.fail "no such function: ${fn}"
+                        return 1
+                    fi ;;
+        version)    printf "nim.metashell @ %s\n" "${_nim_root}" ;;
+        ""|--help|-h)   _nim_help ;;
+        *)          # try as a function name
+                    if nim.fn.exists "${cmd}"; then
+                        "${cmd}" "${@}"
+                    elif nim.fn.exists "nim.${cmd}"; then
+                        "nim.${cmd}" "${@}"
+                    else
+                        printf "nim: unknown subcommand: %s\n" \
+                            "${cmd}" >&2
+                        printf "     try: nim help\n" >&2
+                        return 1
+                    fi ;;
+    esac; }
+
+_nim_main "${@}"
