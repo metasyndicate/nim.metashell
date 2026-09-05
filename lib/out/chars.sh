@@ -176,15 +176,27 @@ function nim.alpha.to.char() {
     echo "error: index ${idx} out of range for set 'alphabet' (0 to $((${#chars[@]} - 1)))." >&2; return 1; fi
   echo "${chars[$idx]}"; return 0; }
 
+function nim.charset.by.name() {
+local filter="${1:-alphabet_caps_bold_italic}"
+local sets=( $(grep "${filter}" "${BASH_SOURCE[0]}" | cut -d'=' -f1) )
+local chars="${sets[0]}[@]"
+local charset=(${!chars})
+[[ -z ${charset} ]] && return 1;
+printf "%b" "${charset[@]}\n"
+}
+
 function nim.string.to.chars() {
   local str="${1,,}"; 
-  local charset="${2:-${alphabet_caps_bold_italic[@]}}"
+  local tag="${2:-alphabet_caps_bold_italic}[@]"
+  local charset=( ${!tag} ) 
   local chars=()
   for ((i=0; i<${#str}; i++)); do
     local c="${str:i:1}"
+    [[ ! "${c}" =~ (a-z) ]] && chars+=( "${c}" ) 
     # printf "%b\n" ${c}
     local idx=$(nim.alpha.to.index "${c}" 2>/dev/null) || continue
-    (( idx >= 0 )) && chars+=( ${charset[$idx]} ); done
+    (( idx >= 0 )) && chars+=( "${charset[${idx}]}" ); done
+echo "CHARS: ${chars[@]}" >&2
   local out=$(printf "%b" "${chars[@]}" | tr -d ' [](){}\t\n')
   printf "%q" ${out// /}; printf "\n"; return 0; }
     
