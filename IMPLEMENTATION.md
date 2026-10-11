@@ -330,6 +330,7 @@ These compose the development surface: the framework uses `nim.fn.validate.args`
 | `sys/db.sh` | `nim.db.{query,store,seed}` — local schematic datastore (JSON). |
 | `sys/codex.sh` | `nim.codex.{add,set,list,export,find}` — the command catalog (per CLAUDE.md). |
 | `sys/ldap.sh` | `nim.ldap.{search,bind,user}` — directory queries. |
+| `sys/clip.sh` | `nim.clip.{copy,paste,history}` — system clipboard bridge; the `history` path feeds `nim.codex.add`. |
 
 `sys/codex.sh` is the implementation target named in the project CLAUDE.md — it lives at L3 and uses `core/cfg.sh` (paths), `core/log.sh` (audit), `in/` (operator prompts), and `out/` (export rendering).
 
