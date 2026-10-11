@@ -25,6 +25,15 @@ unset NIM_METASHELL NIM_HOME NIM_OPS NIM_METASHELL_ETC NIM_METASHELL_BIN
 unset NIM_METASHELL_LIB NIM_METASHELL_DAT NIM_METASHELL_SYS NIM_METASHELL_LOG NIM_METASHELL_VAR
 
 source "${_nim_init_lib}/nim.sh" || return 1
-nim.source colors output strings input get validate fs mod codex setup 2>/dev/null
+nim.source colors output strings input get validate dispatch \
+           fs mod clip codex setup 2>/dev/null
+
+# Interactive conveniences. Registered here rather than at module load time
+# so that sourcing core/dispatch.sh has no side effect on the shell.
+if declare -F nim.dispatch.complete >/dev/null 2>&1; then
+    complete -F nim.dispatch.complete nim
+    (( ${NIM_LOGLEVEL:-4} >= 6 )) \
+        && printf "nim: completion registered for 'nim'\n" >&2
+fi
 
 unset _nim_fn _nim_init_etc_dir _nim_init_root _nim_init_lib

@@ -55,7 +55,8 @@ source "${_nim_lib}" || {
 # without the operator first having to source the right module.
 nim.source colors output strings \
             input get validate \
-            fs mod codex setup 2>/dev/null
+            dispatch \
+            fs mod clip codex setup 2>/dev/null
 
 # === SUBCOMMAND DISPATCH ===
 
@@ -118,16 +119,16 @@ _nim_main() {
                     fi ;;
         version)    printf "nim.metashell @ %s\n" "${_nim_root}" ;;
         ""|--help|-h)   _nim_help ;;
-        *)          # try as a function name
+        *)          # try as a fully-qualified function name, then fall back
+                    # to multi-token namespace routing: `nim fs mkdir /tmp/x`
+                    # resolves to nim.fs.mkdir, and an incomplete path lists
+                    # that namespace level instead of erroring.
                     if nim.fn.exists "${cmd}"; then
                         "${cmd}" "${@}"
                     elif nim.fn.exists "nim.${cmd}"; then
                         "nim.${cmd}" "${@}"
                     else
-                        printf "nim: unknown subcommand: %s\n" \
-                            "${cmd}" >&2
-                        printf "     try: nim help\n" >&2
-                        return 1
+                        nim.dispatch "${cmd}" "${@}"
                     fi ;;
     esac; }
 

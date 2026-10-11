@@ -296,6 +296,22 @@ These compose the development surface: the framework uses `nim.fn.validate.args`
 
 **Why the cache.** Every `nim.*` function call invokes `nim.fn.validate.args`, which needs to know the caller's required-positional count. Re-parsing the source file on every call would re-`sed` the file each time. Instead, `nim.source`'s post-load hook calls `nim.fn.scan` once per module, populating `_NIM_FN_META` and `_NIM_FN_REQUIRED` in bulk. Subsequent validation is an `${associative_array[key]}` lookup — O(1).
 
+### 6.6 `core/dispatch.sh` — multi-token routing
+
+Turns operator-friendly token sequences into function calls: `nim fs mkdir /tmp/x` → `nim.fs.mkdir /tmp/x`. Without it, `bin/nim` can only resolve a single token (`<cmd>` or `nim.<cmd>`).
+
+| Function | Purpose |
+|----------|---------|
+| `nim.dispatch.resolve <token...>` | Greedy longest-match of tokens to a defined `nim.*` function. Emits `<function> <depth>`; depth is the token count consumed, so the remainder are the target's own args. |
+| `nim.dispatch.list [prefix]` | Immediate child tokens of a namespace prefix. Returns 1 at a leaf. |
+| `nim.dispatch.browse [prefix]` | Render one namespace level — leaves with their `@description`, branches marked. |
+| `nim.dispatch [token...]` | The router. Strips `-h`/`--help`, resolves, then invokes; browses the nearest existing ancestor when the path is incomplete. |
+| `nim.dispatch.complete` | Bash completion. Registered from `etc/nim.init.sh`, not at module load, so sourcing the module has no side effect on the shell. |
+
+**This module routes only.** Metadata, usage rendering and arity checking are delegated to `core/fn.sh` (`nim.fn.metadata`, `nim.fn.help`, and the target's own `nim.fn.validate.args` on invocation) rather than reimplemented. The dispatcher deliberately does not pre-validate: the metadata cache is already the single source of truth for argument shape (§6.5), and a second parser would be a second truth.
+
+**Flag stripping removes whole elements only.** `${args[@]/-h/}` is a substring replacement — it rewrites any argument that merely *contains* the flag, turning `/path-here` into `/pathere` and `--host` into `-ost`. The loop uses `case` on exact matches.
+
 ---
 
 ## 7. IO Modules (L2)
