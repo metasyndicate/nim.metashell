@@ -29,15 +29,23 @@ declare -gx NIM_LIBPATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 declare -gx NIM_METASHELL="$(dirname "${NIM_LIBPATH}")"
 declare -gx NIM_HOME="$(dirname "${NIM_METASHELL}")"
 
-P1=FAIL; P2=FAIL; P3=FAIL
-
-[[ -e ${NIM_LIBPATH} ]] && P1=PASS
-[[ -e ${NIM_METASHELL} ]] && P2=PASS
-[[ -e ${NIM_HOME} ]] && P3=PASS
-
-printf "NIM_LIBPATH (%s) ............ %s\n" ${NIM_LIBPATH} ${P1} 
-printf "NIM_METASHELL (%s) .......... %s\n" ${NIM_METASHELL} ${P2}
-printf "NIM_HOME (%s) ............... %s\n" ${NIM_HOME} ${P3}
+# Root validation. A missing root is reported unconditionally — it is an
+# error, not a status line. The passing case is trace-level detail; `nim
+# doctor` is the interface for auditing a healthy environment.
+#
+# Everything here goes to stderr. stdout belongs to function return values,
+# so that `x="$(nim path absolute .)"` captures the path and nothing else.
+for _nim_boot_root in NIM_LIBPATH NIM_METASHELL NIM_HOME; do
+    if [[ -e ${!_nim_boot_root} ]]; then
+        (( ${NIM_LOGLEVEL:-4} >= 7 )) && \
+            printf "nim.sh: %-14s %s\n" \
+                "${_nim_boot_root}" "${!_nim_boot_root}" >&2
+    else
+        printf "nim.sh: %-14s INVALID (%s)\n" \
+            "${_nim_boot_root}" "${!_nim_boot_root:-unset}" >&2
+    fi
+done
+unset _nim_boot_root
 
 [[ -z ${NIM_OPS} ]] && declare -gx NIM_OPS="${HOME}/${NIM_STOR}/${NIM_SUBTAG}"
 
@@ -91,7 +99,9 @@ nim.cfg.load "${PWD}/.${NIM_TAG}/nim.cfg"   2>/dev/null    # project
 nim.cfg.load "${HOME}/${NIM_STOR}/nim.cfg"  2>/dev/null    # user
 nim.cfg.load "${NIM_METASHELL}/etc/nim.cfg" 2>/dev/null    # system
 
-if (( ${NIM_LOGLEVEL:-4} >= 4 )); then
+# Informational, not a warning — level 4 is the default, and a successful
+# boot is not something a warn-level operator asked to hear about.
+if (( ${NIM_LOGLEVEL:-4} >= 6 )); then
     printf "nim: %s ready (%s)\n" "${NIM_SUBTAG}" "${NIM_LIBPATH}" >&2
 fi
 

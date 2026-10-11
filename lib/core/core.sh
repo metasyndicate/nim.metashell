@@ -79,7 +79,9 @@ function nim.path.init() { .nim.core.init.fn || return 1
 ##! @example nim.source log fn colors
 function nim.source() { .nim.core.init.fn || return 1
     local script path libpath out=0
-    (( ${NIM_LOGLEVEL:-4} >= 4 )) && out=1
+    # Per-module load chatter is trace detail. A failure is reported below
+    # regardless of level, so muting this loses no error information.
+    (( ${NIM_LOGLEVEL:-4} >= 7 )) && out=1
     for script in "${@}"; do
         # idempotent
         [[ -n ${_NIM_LOADED[${script}]} ]] && continue
@@ -107,7 +109,13 @@ function nim.source() { .nim.core.init.fn || return 1
                 && nim.fn.scan "${path}" 2>/dev/null
             (( out == 1 )) && printf "OK\n" >&2
         else
-            (( out == 1 )) && printf "FAIL\n" >&2
+            # Complete the open trace line when tracing, otherwise emit a
+            # standalone error — a load failure is never silent.
+            if (( out == 1 )); then
+                printf "FAIL\n" >&2
+            else
+                printf "nim.source: failed to load: %s\n" "${path}" >&2
+            fi
             return 1
         fi
     done
