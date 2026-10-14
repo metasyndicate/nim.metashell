@@ -78,3 +78,20 @@ function nim.str.repeat() { nim.fn.validate.args "${@}" || return 1
     local i; for (( i = 0; i < count; i++ )); do out+="${text}"; done
     printf "%s" "${out}"
     return 0; }
+
+##! @function nim.str.truncate
+##! @description clip a string to <width> chars, marking the cut with [mark]
+##! @description mark counts toward width; text within width passes through
+##! @param <text>           input string
+##! @param <width>          maximum width (non-negative integer)
+##! @param [mark=…]         truncation marker; empty string for a hard cut
+##! @output truncated string on stdout
+##! @return 0 on success, 1 if width is not a non-negative integer
+##! @example nim.str.truncate "righteous entropy synthesis" 12   # righteous e…
+function nim.str.truncate() { nim.fn.validate.args "${@}" || return 1
+    local text="${1}"; local width="${2}"; local mark="${3-…}"
+    [[ ${width} =~ ^[0-9]+$ ]] || return 1
+    (( ${#text} <= width )) && { printf "%s" "${text}"; return 0; }
+    (( ${#mark} >= width )) && { printf "%s" "${text:0:width}"; return 0; }
+    printf "%s%s" "${text:0:width-${#mark}}" "${mark}"
+    return 0; }

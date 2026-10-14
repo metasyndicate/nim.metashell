@@ -1,0 +1,26 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+
+# Editors
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Runtime output
+*.log
+*.tmp
+
+# Local environment and secrets
+.env
+.env.*
+
+# Claude Code per-user settings
+.claude/settings.local.json

@@ -155,6 +155,22 @@ function nim.fn.metadata() {
     printf "%s" "${block}" | sed -nE "s|^##! @${field}[[:space:]]+||p"
     return 0; }
 
+##! @function nim.fn.required
+##! @description report the required-positional count a function declares
+##! @description reads the ##! @param schema via cache; populates it lazily.
+##! @param <name>           function name
+##! @output required-positional count on stdout
+##! @return 0 on success, 1 if undefined or carrying no metadata
+##! @example nim.fn.required nim.fn.metadata
+function nim.fn.required() {
+    nim.fn.validate.args "${@}" || return 1
+    local name="${1}"
+    nim.fn.exists "${name}" || return 1
+    [[ -z ${_NIM_FN_REQUIRED[${name}]-} ]] && {
+        nim.fn.metadata "${name}" >/dev/null || return 1; }
+    printf "%s\n" "${_NIM_FN_REQUIRED[${name}]:-0}"
+    return 0; }
+
 ##! @function nim.fn.scan
 ##! @description extract ##! metadata for every @function in <script>
 ##! @description invoked by nim.source's post-source hook for every loaded

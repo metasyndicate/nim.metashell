@@ -99,3 +99,20 @@ function nim.fs.size() { .nim.core.init.fn || return 1
         || stat -c '%s' "${path}" 2>/dev/null)"
     printf "%s" "${size}"
     return 0; }
+
+##! @function nim.fs.mtime
+##! @description modification time of a file in epoch seconds (portable across BSD/GNU stat)
+##! @param <path>
+##! @output integer epoch seconds on stdout
+##! @return 0 on success, 1 if path missing or stat yields nothing
+##! @example nim.fs.mtime ~/.bashrc
+function nim.fs.mtime() { .nim.core.init.fn || return 1
+    nim.fn.validate.args "${@}" || return 1
+    local path="${1}"
+    [[ -e ${path} ]] || return 1
+    local mtime
+    mtime="$(stat -f '%m' "${path}" 2>/dev/null \
+        || stat -c '%Y' "${path}" 2>/dev/null)"
+    [[ -n ${mtime} ]] || return 1
+    printf "%s" "${mtime}"
+    return 0; }

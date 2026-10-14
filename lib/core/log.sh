@@ -1,13 +1,9 @@
 #!/usr/bin/env bash
 
-# another *righteous entropy synthesis* by ⎰𝙉𝙄𝙈⎰ ...
+# 𝘣𝘺… 🅽⚛🅸⚛🅼 🫧ᴮᴵᴼᴹᴵᴹᴱᵀᴵᴷ |🛰️꩟ NIM Planetary Substation № ⟪𝟖⟫ | metasyndicate.org
 # ----------------------------------------------------------------------------
-#   NIM Substation One | Planet Earth | https://github.com/metasyndicate
-# ----------------------------------------------------------------------------
-#   ... The NIM ***Metashell***: ***log***
-#   structured logging. routes through logger(1) when available; falls back
-#   to direct file append. mirrors WARN+ to stderr. NIM_LOGLEVEL gates
-#   debug/info; error/warn always emit.
+#   The NIM Metashell | module ***log*** | structured logging
+#   NIM_LOGLEVEL gates debug/info; error/warn always emit.
 # ----------------------------------------------------------------------------
 
 # === GLOBALS ===
