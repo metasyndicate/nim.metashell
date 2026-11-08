@@ -86,7 +86,7 @@ function nim.source() { .nim.core.init.fn || return 1
         path=""
         for libpath in "${_NIM_LIBPATHS[@]}"; do
             [[ -d ${libpath} ]] || continue
-            path="$(find "${libpath}" -type f \
+            path="$(find -H "${libpath}" -type f \
                 \( -name "${script}.sh" -o -path "*/${script}.sh" \) \
                 2>/dev/null | head -1)"
             [[ -n ${path} ]] && break
