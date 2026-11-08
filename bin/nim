@@ -31,28 +31,34 @@ _nim_bin_dir="$(cd "$(dirname "${_nim_real}")" && pwd)"
 _nim_root="$(dirname "${_nim_bin_dir}")"
 _nim_lib="${_nim_root}/lib/nim.sh"
 
-[[ -r ${_nim_lib} ]] || {
-    printf "nim: cannot locate library: %s\n" "${_nim_lib}" >&2
-    exit 1; }
+[[ -r ${_nim_lib} ]] || { printf "nim: cannot locate library: %s\n" "${_nim_lib}" >&2; exit 1; }
 
 # === FORCE THE PATH ROOTS ===
 # bin/nim is authoritative about where the metashell lives — override any
 # stale environment values inherited from the parent shell.
+unset NIM_LIBPATH NIM_HOME 
 export NIM_LIBPATH="${_nim_root}/lib"
+export NIM_HOME="${NIM_LIBPATH/lib/}"
 export NIM_METASHELL="${_nim_root}"
 unset NIM_HOME NIM_OPS NIM_METASHELL_ETC NIM_METASHELL_BIN \
       NIM_METASHELL_LIB NIM_METASHELL_DAT NIM_METASHELL_SYS \
       NIM_METASHELL_LOG NIM_METASHELL_VAR
 
+echo "PERIMETER UPLINK ... ${NIM_LIBPATH}" >&2
+
 # === BOOT THE LIBRARY ===
 
-source "${_nim_lib}" || {
-    printf "nim: bootstrap failed\n" >&2
-    exit 1; }
+[[ -z ${NIM_LIBPATH} ]] && { echo -e "FATAL: NIM_LIBPATH is empty\n" >&2; }
+[[ ! -e ${NIM_LIBPATH} ]] && { echo -e "FATAL: NIM_LIBPATH (${NIM_LIBPATH}) does not exist\n" >&2; } 
+[[ ! -x ${NIM_LIBPATH} ]] && { echo -e "FATAL: NIM_LIBPATH (${NIM_LIBPATH}) insufficient permissions\n" >&2; }
+cd ${NIM_LIBPATH} 2>/dev/null && source "${_nim_lib}" || { printf "nim: bootstrap failed\n" >&2; return 1; }
 
 # Eager-load the full L2/L3 surface so `nim list` and `nim run` see every
 # public function. Cheap on a small library; allows `nim run any.public.fn`
 # without the operator first having to source the right module.
+source "${NIM_LIBPATH}/core/core.sh"
+echo "PERIMETER UPLINK ... ${NIM_LIBPATH}" >&2
+
 nim.source colors output strings \
             input get validate \
             fs mod codex setup 2>/dev/null

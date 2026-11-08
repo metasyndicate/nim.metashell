@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
 # Source this file from an interactive shell or your shell rc.
 # Example: source /path/to/nim.metashell/etc/nim.init.sh
@@ -20,11 +20,12 @@ if declare -F nim.source >/dev/null 2>&1; then
     done < <(declare -F | awk '{print $3}' | grep '^nim\.')
 fi
 
-export NIM_LIBPATH="${_nim_init_lib}"
+[[ -z ${NIM_LIBPATH} ]] && export NIM_LIBPATH="${_nim_init_lib:-$(dirname $(readlink -f ${BASH_SOURCE[0]/etc/lib}))}"
 unset NIM_METASHELL NIM_HOME NIM_OPS NIM_METASHELL_ETC NIM_METASHELL_BIN
 unset NIM_METASHELL_LIB NIM_METASHELL_DAT NIM_METASHELL_SYS NIM_METASHELL_LOG NIM_METASHELL_VAR
 
-source "${_nim_init_lib}/nim.sh" || return 1
+source "${_nim_init_lib:-${NIM_LIBPATH}}/nim.sh" || return 1
+source "${_nim_init_lib:-${NIM_LIBPATH}}/core/core.sh"
 nim.source colors output strings input get validate fs mod codex setup 2>/dev/null
-
+#echo "${NIM_LIBPATH}" >&2
 unset _nim_fn _nim_init_etc_dir _nim_init_root _nim_init_lib

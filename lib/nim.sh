@@ -25,7 +25,7 @@
 
 # Canonical roots come from THIS nim.sh location; do not trust inherited
 # values from another NIM surface already loaded in the parent shell.
-declare -gx NIM_LIBPATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+[[ -z ${NIM_LIBPATH} ]] && declare -gx NIM_LIBPATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 declare -gx NIM_METASHELL="$(dirname "${NIM_LIBPATH}")"
 declare -gx NIM_HOME="$(dirname "${NIM_METASHELL}")"
 
