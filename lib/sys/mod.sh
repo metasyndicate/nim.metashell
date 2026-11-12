@@ -86,6 +86,15 @@ function nim.mod.list() { .nim.core.init.fn || return 1
     done
     return 0; }
 
+##! @function nim.mod.exists
+##! @description quietly check whether a subsystem name is registered
+##! @param <name>          subsystem name as registered
+##! @return 0 if registered, 1 otherwise (no logging, unlike mod.info)
+##! @example nim.mod.exists crypt && nim.mod.info crypt
+function nim.mod.exists() { .nim.core.init.fn || return 1
+    nim.fn.validate.args "${@}" || return 1
+    [[ -n ${_NIM_SYS[${1}]-} ]]; }
+
 ##! @function nim.mod.info
 ##! @description show manifest contents for a registered subsystem
 ##! @param <name>          subsystem name as registered

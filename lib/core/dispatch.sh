@@ -44,6 +44,18 @@ function nim.dispatch.resolve() { .nim.core.init.fn || return 1
     printf "nim 0\n"
     return 1; }
 
+##! @function nim.dispatch.exists
+##! @description check whether a full token path resolves to an exact leaf
+##! @description function, as opposed to a partial namespace or no match
+##! @param <token...>          namespace tokens, outermost first
+##! @return 0 if the tokens resolve exactly to a function, 1 otherwise
+##! @example nim.dispatch.exists fs mkdir
+function nim.dispatch.exists() { .nim.core.init.fn || return 1
+    nim.fn.validate.args "${@}" || return 1
+    local name depth
+    read -r name depth < <(nim.dispatch.resolve "${@}")
+    (( depth == ${#} )); }
+
 ##! @function nim.dispatch.list
 ##! @description list the immediate child tokens of a namespace prefix
 ##! @param [prefix=nim]        dotted namespace prefix

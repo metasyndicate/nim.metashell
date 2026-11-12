@@ -18,7 +18,9 @@ declare -gA _NIM_LOADED 2>/dev/null
 # Library search paths. NIM_LIBPATH is element 0; subsystem registration
 # via nim.mod.register appends additional paths. nim.source iterates this.
 declare -ga _NIM_LIBPATHS 2>/dev/null
-[[ ${#_NIM_LIBPATHS[@]} -eq 0 ]] && _NIM_LIBPATHS=( "${NIM_LIBPATH}" )
+[[ ${#_NIM_LIBPATHS[@]} -eq 0 ]] && _NIM_LIBPATHS=( ${NIM_LIBPATH:-$(dirname ${BASH_SOURCE[0]})} )
+# for libs in $(ls -d -1 ${NIM_LIBPATH}); do echo "LIBS: ${libs}" >&2; done
+for libs in $(find ${NIM_LIBPATH} -type d); do _NIM_LIBPATHS+=( ${libs} ); done;
 
 # === PRIVATE ===
 

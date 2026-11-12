@@ -60,6 +60,16 @@ function nim.validate.email() { nim.fn.validate.args "${@}" || return 1
     local re='^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'
     [[ ${1} =~ ${re} ]] && return 0 || return 1; }
 
+##! @function nim.validate.bool
+##! @description test whether input is a boolean token (case-insensitive)
+##! @description token set per YAML 1.1 bool: true|false yes|no on|off 1|0
+##! @param <value>          candidate
+##! @return 0 if boolean token, 1 otherwise
+##! @example nim.validate.bool "${NIM_VALIDATE_LOUD:-0}" && echo ok
+function nim.validate.bool() { nim.fn.validate.args "${@}" || return 1
+    nim.validate.enum "${1,,}" true false yes no on off 1 0 && return 0
+    return 1; }
+
 ##! @function nim.validate.identifier
 ##! @description valid NIM identifier (lowercase, underscores; no lead digit)
 ##! @param <value>

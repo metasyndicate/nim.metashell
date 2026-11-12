@@ -49,6 +49,27 @@ function nim.fs.touch() { .nim.core.init.fn || return 1
     nim.log.info "fs.touch: ${path}"
     return 0; }
 
+##! @function nim.fs.write
+##! @description atomic write: stage content in a sibling temp file, then rename over <path>
+##! @description content from [text] when given, otherwise stdin; an existing file's mode is kept
+##! @description readers see the old content or the new, never a partial write (rename(2))
+##! @param <path>           destination file (parent dirs created; directories refused)
+##! @param [text]           content to write verbatim (stdin when omitted)
+##! @return 0 on success, 1 on failure (destination left untouched)
+##! @example printf "mode=ops\n" | nim.fs.write "${NIM_OPS}/cfg/nim.conf"
+function nim.fs.write() { .nim.core.init.fn || return 1
+    nim.fn.validate.args "${@}" || return 1
+    local path="${1}"
+    local tmp="${path}.$$.${RANDOM}.tmp"
+    [[ -d ${path} ]] && { nim.log.error "fs.write: is a directory: ${path}"; return 1; }
+    nim.fs.mkdir "$(dirname "${path}")" || return 1
+    [[ -f ${path} ]] && cp -p "${path}" "${tmp}" 2>/dev/null    # inherit mode
+    if (( ${#} > 1 )); then printf "%s" "${2}"; else cat; fi 2>/dev/null > "${tmp}" \
+        && mv -f "${tmp}" "${path}" 2>/dev/null || {
+        rm -f "${tmp}"; nim.log.error "fs.write: failed: ${path}"; return 1; }
+    nim.log.info "fs.write: ${path}"
+    return 0; }
+
 ##! @function nim.fs.backup
 ##! @description copy a file alongside itself with a timestamp suffix
 ##! @param <path>           file to back up

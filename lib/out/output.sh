@@ -38,6 +38,18 @@ function nim.out.warn() { printf "${YEL}⚠${OFF} %s\n" "${*}" >&2; return 0; }
 ##! @param [msg=]
 function nim.out.info() { printf "${SKY}ℹ${OFF} %s\n" "${*}" >&2; return 0; }
 
+##! @function nim.out.debug
+##! @description print a DEBUG indicator; no-op unless NIM_LOGLEVEL >= 7
+##! @description pairs with nim.log.level — debug|trace raises the gate
+##! @param [msg=]
+##! @output • + message to stderr, only when loglevel permits
+##! @return 0 always (silent no-op below debug level)
+##! @example nim.log.level debug; nim.out.debug "cache miss: ${key}"
+function nim.out.debug() {
+    (( ${NIM_LOGLEVEL:-4} >= 7 )) || return 0
+    printf "${GRY}•${OFF} %s\n" "${*}" >&2
+    return 0; }
+
 ##! @function nim.out.status
 ##! @description print a label with a right-aligned status indicator
 ##! @param <label>          leading label (max 60 cols recommended)

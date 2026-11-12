@@ -59,3 +59,15 @@ function nim.in.select() { nim.fn.validate.args "${@}" || return 1
         && (( reply >= 1 && reply <= ${#options[@]} )) \
         && { printf "%s" "${options[$((reply-1))]}"; return 0; }
     return 1; }
+
+##! @function nim.in.pause
+##! @description block for a single keypress; no-op on non-tty (never hangs)
+##! @param [label=press any key to continue…]   prompt text
+##! @return 0 always
+##! @example nim.in.pause "press any key before deploy"
+function nim.in.pause() { nim.fn.validate.args "${@}" || return 1
+    local label="${1:-press any key to continue…}"
+    [[ ! -t 0 ]] && return 0
+    read -r -n 1 -s -p "${SKY}${label}${OFF}"
+    printf "\n"
+    return 0; }

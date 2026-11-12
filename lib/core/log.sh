@@ -84,6 +84,24 @@ function nim.log() {
     esac
     return 0; }
 
+##! @function nim.log.level
+##! @description get or set NIM_LOGLEVEL by name or RFC 5424 severity number
+##! @description names: off=0 error|err=3 warn|warning=4 info=6 debug|trace=7
+##! @param [level=]         name or 0-7; omit to read the current level
+##! @output current numeric level on stdout when called without a level
+##! @return 0 on success, 1 if level is unknown (NIM_LOGLEVEL unchanged)
+##! @example nim.log.level info         # NIM_LOGLEVEL=6
+##! @example nim.log.level              # → 4
+function nim.log.level() {
+    (( ${#} )) || { printf "%s\n" "${NIM_LOGLEVEL}"; return 0; }
+    local n
+    case "${1}" in
+        off) n=0 ;;  error|err) n=3 ;;  warn|warning) n=4 ;;  info) n=6 ;;
+        debug|trace) n=7 ;;  [0-7]) n="${1}" ;;
+        *) nim.log.error "log.level: unknown level: ${1}"; return 1 ;;
+    esac
+    declare -gx NIM_LOGLEVEL="${n}"; return 0; }
+
 ##! @function nim.log.stamp.begin
 ##! @description mark session start in the logfile
 function nim.log.stamp.begin() {

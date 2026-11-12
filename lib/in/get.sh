@@ -65,3 +65,21 @@ function nim.get.arg() { nim.fn.validate.args "${@}" || return 1
     (( n > ${#} )) && return 1
     printf "%s" "${!n}"
     return 0; }
+
+##! @function nim.get.kv
+##! @description extract the value of a bare key=value token from an argv array
+##! @description key matches left of the first "="; value keeps any later "="
+##! @description first match wins; for --key=value forms use nim.get.opt
+##! @param <key>            key name (non-empty, without trailing =)
+##! @param <args>...        the caller's $@
+##! @output value (or empty) on stdout
+##! @return 0 if found, 1 otherwise
+##! @example nim.get.kv mode name=nim mode=ops     # → ops
+##! @example nim.get.kv url url=a=b                # → a=b
+function nim.get.kv() { nim.fn.validate.args "${@}" || return 1
+    local key="${1}"; shift
+    [[ -n ${key} ]] || return 1
+    local arg
+    for arg in "${@}"; do
+        [[ ${arg} == "${key}="* ]] && { printf "%s" "${arg#*=}"; return 0; }
+    done; return 1; }

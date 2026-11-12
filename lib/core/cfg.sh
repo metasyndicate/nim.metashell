@@ -69,6 +69,24 @@ function nim.cfg.get() {
     printf "%s" "${!key:-${default}}"
     return 0; }
 
+##! @function nim.cfg.require
+##! @description assert one or more keys resolve to a non-empty value
+##! @description fails on the first unset/empty key (left to right)
+##! @param <key>...         variable name(s) to check
+##! @return 0 if all keys are set and non-empty, 1 otherwise
+##! @example nim.cfg.require NIM_METASHELL_ETC NIM_OPS || exit 1
+function nim.cfg.require() {
+    local key
+    [[ ${#} -eq 0 ]] && {
+        printf "cfg.require: <key>... required\n" >&2
+        return 1; }
+    for key in "${@}"; do
+        [[ -n ${!key} ]] || {
+            printf "cfg.require: %s unset\n" "${key}" >&2
+            return 1; }
+    done
+    return 0; }
+
 ##! @function nim.cfg.path
 ##! @description resolve a path-bearing key with a filesystem test
 ##! @param <key>            path-bearing variable (e.g. NIM_METASHELL_ETC)
