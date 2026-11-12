@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-NIM_SHELL_TAXONOMY="$(dirname ${BASH_SOURCE[0]})"
+NIM_SHELL_TAXONOMY="$(dirname $(readlink -f ${BASH_SOURCE[0]}))"
 
 echo "NIM_SHELL_TAXONOMY=${NIM_SHELL_TAXONOMY}"
 
